@@ -1,0 +1,58 @@
+// Shamir Secret Sharing
+attacker[active]
+
+// Defining the system entities
+principal Signer[]
+principal Verifier[]
+principal MerchantA[]
+principal MerchantB[]
+
+// Keygen
+principal Signer[
+	generates id // identity of the user
+
+	// convert identity into secret keys for Lampor Signature scheme
+	sk_0, sk_1, _ = SHAMIR_SPLIT(id)
+	
+	// obtain individual public keys for each bit to sign
+	pk_0 = HASH(sk_0)
+	pk_1 = HASH(sk_1)
+	
+	// hash into a master public key
+	pk = HASH(pk_0, pk_1)
+]
+
+// Verifier obtains the public key
+Signer -> Verifier: [pk]
+
+// Sign Tx for Merchant A (signing a 0 bit)
+Signer 	  -> MerchantA: sk_0, pk_1
+MerchantA -> Verifier : sk_0, pk_1
+
+principal Verifier[
+	_pk_0 = HASH(sk_0)
+
+	obtained_pk = HASH(_pk_0, pk_1)
+
+	// check if obtained pk matches the registered pk
+	_ = ASSERT(obtained_pk, pk)?
+]
+
+// Sign Tx for Merchant B (signing a 1 bit)
+// This is the double spent tx
+Signer 	  -> MerchantB: pk_0, sk_1
+MerchantB -> Verifier : pk_0, sk_1
+
+principal Verifier[
+	_pk_1 = HASH(sk_1)
+
+	_pk = HASH(pk_0, _pk_1)
+
+	// check if obtained pk matches the registered pk
+	_ = ASSERT(_pk, pk)?
+]
+
+// Query to check if identity of double spender is leaked. 
+queries[
+	confidentiality? id
+]
