@@ -1,0 +1,74 @@
+---
+config:
+  look: handDrawn
+  theme: redux
+---
+sequenceDiagram
+    participant bank as Bank
+    participant a as Alice
+    participant b as Bob
+    participant c as Charlie
+
+    Note over a: $$s \xleftarrow{\$}{\{0, 1\}^{\lambda}}$$
+
+    Note over a: Derive random coefficients:<br/>a = H("secret" || rho)<br/>r_1,...,r_256 = H("coeff" || rho || k)
+
+    Note over a: Define degree-256 polynomial:<br/>f(X) = a + r_1*X + ... + r_256*X^256
+
+    note over a: $$a = H("secret", s)$$
+    Note over a: Hidden decryption secret is a = f(0)
+
+    Note over a: $$ i \in \{1, ..., 512\}$$
+    Note over a: $$sk_{i} = f(x_i)$$<br/>
+    Note over a: $$pk_i = H(sk_i)$$
+
+    Note over a: $$pk = H(pk_{1}, ..., pk_{512})$$
+
+    note over a: $$c \longleftarrow pk $$
+    note over a: $$bc \longleftarrow Blind(c, r) $$
+    note over a: π:<br>"This is my public id,<br> bc is a well-formed blinded coin, <br> the secret keys encode a key k,<br> and ctxt = Enc(k, id)
+    %% Send blinded coin
+    a->>bank: (id, bc,ctxt, π)
+
+    note over bank: Verify(π)
+
+    bank-->>a: σ(bc)
+
+    note over a: remove blinding factor
+    note over a: obtain σ(c)
+
+    note over b: create invoice message: m
+    b ->> a: m
+    note over a: $$ (sk_{m_{0}}, ..., sk_{m_{n}}) \longleftarrow Sign(m)$$
+    a ->> b:  $$ \sigma(c), (sk_{m_{0}}, ..., sk_{m_{n}})$$
+    b ->> bank: $$ \sigma(c), (sk_{m_{0}}, ..., sk_{m_{n}})$$
+
+    note over bank: Validate Signature
+    
+    note over bank: credit Merchant account
+    bank ->>b: ok
+
+    note over c: create invoice message: m'
+    
+    c ->> a: m'
+
+    note over a: $$ (sk_{m'_{0}}, ..., sk_{m'_{n}}) \longleftarrow Sign(m')$$
+
+    a ->> c:  $$ \sigma(c), (sk_{m'_{0}}, ..., sk_{m'_{n}})$$
+
+    c ->> bank: $$ \sigma(c), (sk_{m'_{0}}, ..., sk_{m'_{n}})$$
+
+    a->>c: Double-spend same coin with Lamport signature on m2
+    Note over c: Reveals another 256 values sk_j
+
+    b->>bank: Submit spend transcript
+    c->>bank: Submit conflicting spend transcript
+
+    note over bank: Detect double spend
+    Note over bank: If the two message digests differ,<br/>the union contains at least 257 distinct sk_j values
+
+    Note over bank: Treat each revealed sk_j as point (x_j, f(x_j))
+
+    Note over bank: Interpolate f from 257 points
+
+    Note over bank: Recover a = f(0), then decrypt accountability payload
