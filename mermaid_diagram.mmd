@@ -38,9 +38,6 @@ sequenceDiagram
     note left of a: obtain coin c
     Note left of a: $$ c = H(pk_{1,0},pk_{1,1},\ldots,pk_{256,0},pk_{256,1})$$
 
-    
-
-
     note over a: end of coin generation step
 end
 
@@ -56,7 +53,7 @@ end
 
     Note over a: ZK proof:<br/>bc blinds coin<br/>pk is well formed<br/>ctxt encrypts id under k
 
-    a->>bank: id, bc, ctxt, π
+    a->>bank: id, amount, bc, H(k), ctxt, π
 
         Note over bank: Verify(π)
 
@@ -65,7 +62,9 @@ end
         bank ->> a: error
 
     else Verify(π) == ok
-    note over bank: Sign blinded coin
+        note over bank: Store (H(k), ctxt) pair
+        note over bank: Debit amount from account
+        note over bank: Sign blinded coin
         bank ->> a: σ(bc)
 
     end
