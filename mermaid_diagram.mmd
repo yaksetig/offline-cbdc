@@ -75,6 +75,8 @@ end
     Note left of a: obtain σ(c) 
 
 
+
+
     create participant b as Merchant 1
     a ->>b :hey
     
@@ -87,7 +89,9 @@ end
 
     Note over a: $$sig_m=(sk_{1,d_1},\ldots,sk_{256,d_{256}})$$
 
-    a->>b: coin, sigma(coin), m, sig_m
+    a->>b: $$c, \sigma(c), m, sig_m$$
+
+    destroy b
 
     b->>bank: submit spend transcript
 
@@ -108,11 +112,11 @@ end
 
     c->>bank: submit conflicting transcript
 
-    Note over bank: same coin spent twice
+    Note over bank: detect double spending
 
-    Note over bank: collect revealed pairs:<br/>(i,b), sk_{i,b}
+    Note over bank: collect revealed pairs: $$(i,b) \rightarrow sk_{i,b}$$
 
-    Note over bank: compute slot coordinate:<br/>x_{i,b}=2(i-1)+b+1
+    Note over bank: compute slot coordinate:<br/>$$x_{i,b}=2(i-1)+b+1$$
 
     Note over bank: form points:<br/>(x_{i,b}, sk_{i,b})
 
@@ -120,4 +124,4 @@ end
 
     Note over bank: recover $$k=f(0)$$
 
-    Note over bank: decrypt $$ctxt$$
+    Note over bank: decrypt ctxt
